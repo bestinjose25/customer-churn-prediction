@@ -34,6 +34,20 @@ The included CSV is `data/WA_Fn-UseC_-Telco-Customer-Churn.csv`. It uses the IBM
 
 `artifacts/metrics.json` records model comparisons, held-out metrics, seed, split sizes, and library versions. `artifacts/churn_pipeline.joblib` saves preprocessing and the selected classifier together. Outputs are ignored by Git. The validated run is recorded in `results/metrics.json`; rerunning writes fresh results under `artifacts/`.
 
+## Batch prediction
+
+After training, score a CSV with one row per customer:
+
+```sh
+python predict.py --data path/to/customers.csv --output artifacts/predictions.csv
+```
+
+Use the same feature columns as the training CSV and include a unique
+`customerID` for each row. The `Churn` column is optional and is ignored when
+present. The output preserves the input order and contains `customerID`,
+`churn_probability`, and `predicted_churn` (`Yes` or `No`).
+Use `--model` to select a different trusted pipeline saved by `train.py`.
+
 ## Exploration
 
 Install `requirements-notebook.txt` for Jupyter and matplotlib. Run notebooks from the repository root. The two notebooks are historical exploratory variants, not the authoritative evaluation workflow: their manual preprocessing differs from `train.py`. Use the script for model comparison and reported results.

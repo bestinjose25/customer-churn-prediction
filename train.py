@@ -20,19 +20,26 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 def load_data(path):
-    data = pd.read_csv(path)
-    required = {"Churn", "customerID", "TotalCharges"}
-    if not required.issubset(data.columns):
-        raise ValueError(f"Missing columns: {sorted(required - set(data.columns))}")
-    if data["customerID"].isna().any() or data["customerID"].duplicated().any():
-        raise ValueError("Customer IDs must be present and unique.")
+    data = pd.read_csv(path, dtype={"customerID": str})
+    if "Churn" not in data:
+        raise ValueError("Missing columns: ['Churn']")
+    features = prepare_features(data)
     target = data["Churn"].map({"No": 0, "Yes": 1})
     if target.isna().any() or target.nunique() != 2:
         raise ValueError("Churn must contain both Yes and No, without missing labels.")
-    features = data.drop(columns=["Churn", "customerID"]).copy()
+    return features, target
+
+
+def prepare_features(data):
+    missing = {"customerID", "TotalCharges"} - set(data.columns)
+    if missing:
+        raise ValueError(f"Missing columns: {sorted(missing)}")
+    if data["customerID"].isna().any() or data["customerID"].duplicated().any():
+        raise ValueError("Customer IDs must be present and unique.")
+    features = data.drop(columns=["Churn", "customerID"], errors="ignore")
     # Coerce whitespace/missing charges before numerical conversion; impute in training.
     features["TotalCharges"] = pd.to_numeric(features["TotalCharges"], errors="coerce")
-    return features, target
+    return features
 
 
 def make_pipeline(features, model):
